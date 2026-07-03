@@ -2,65 +2,61 @@
 
 ## Problem Statement
 
-The objective of this assignment is to estimate the unknown parameters of the following parametric curve.
+The goal of this assignment is to estimate the unknown parameters of the following parametric curve.
 
-\[
-x(t)=t\cos(\theta)-e^{M|t|}\sin(0.3t)\sin(\theta)+X
-\]
+```text
+x(t) = t*cos(θ) - e^(M|t|)*sin(0.3t)*sin(θ) + X
 
-\[
-y(t)=42+t\sin(\theta)+e^{M|t|}\sin(0.3t)\cos(\theta)
-\]
+y(t) = 42 + t*sin(θ) + e^(M|t|)*sin(0.3t)*cos(θ)
+```
 
-Unknown Parameters:
+### Unknown Parameters
 
 - θ
 - M
 - X
 
-Parameter Range:
+### Parameter Range
 
 - 0° < θ < 50°
 - -0.05 < M < 0.05
 - 0 < X < 100
 - 6 < t < 60
 
-The dataset (`xy_data.csv`) contains points sampled from the above curve.
+The file **xy_data.csv** contains points sampled from this parametric curve.
 
 ---
 
-# My Approach
+# Approach
 
-Initially, I considered estimating four unknowns:
+At first, I considered estimating four unknowns:
 
 - θ
 - M
 - X
 - t
 
-However, every point has its own value of `t`, making it computationally expensive to search for all of them simultaneously.
+Since every point has its own value of **t**, directly searching for all of them would make the brute-force search extremely expensive.
 
-To simplify the problem, I derived an analytical expression for `t`.
+To reduce the search space, I derived an analytical expression for **t** from the given equations.
 
-Starting from the original equations,
+Starting from
 
-\[
-x=t\cos(\theta)-e^{M|t|}\sin(0.3t)\sin(\theta)+X
-\]
+```text
+x = t*cos(θ) - e^(M|t|)*sin(0.3t)*sin(θ) + X
 
-\[
-y=42+t\sin(\theta)+e^{M|t|}\sin(0.3t)\cos(\theta)
-\]
+y = 42 + t*sin(θ) + e^(M|t|)*sin(0.3t)*cos(θ)
+```
 
-I eliminated the exponential term and obtained
+I obtained
 
-\[
-t=(x-X)\cos(\theta)+(y-42)\sin(\theta)
-\]
+```text
+t = (x - X)*cos(θ) + (y - 42)*sin(θ)
+```
 
-Using this equation, the value of `t` can be computed directly for every point.
+Using this equation, the value of **t** can be computed directly for every point.
 
-This reduced the optimization problem to only three unknown parameters:
+This reduces the optimization problem to only three unknown parameters:
 
 - θ
 - M
@@ -68,54 +64,47 @@ This reduced the optimization problem to only three unknown parameters:
 
 ---
 
-# Brute Force Search
+# Brute Force Algorithm
 
-A brute force search was performed over the parameter space.
-
-For every candidate combination of
+For every possible combination of:
 
 - θ
 - M
 - X
 
-the following steps were performed:
+the following steps are performed:
 
 1. Compute `t` using the derived equation.
-2. Substitute the computed `t` back into the original parametric equations.
-3. Generate the predicted `(x,y)` values.
-4. Compute the L1 distance between the predicted points and the original dataset.
-5. Store the parameters that produce the minimum error.
+2. Substitute `t` back into the original parametric equations.
+3. Compute the predicted `(x, y)` values.
+4. Calculate the L1 distance between the predicted points and the original points.
+5. Store the parameter set with the minimum error.
 
-The L1 error used is
+The L1 error is calculated as
 
-\[
-\sum_{i=1}^{N}
-\left(
-|x_i-x_i^{pred}|
-+
-|y_i-y_i^{pred}|
-\right)
-\]
+```text
+Σ ( |x_actual - x_predicted| + |y_actual - y_predicted| )
+```
 
 ---
 
 # Estimated Parameters
 
-| Parameter | Value |
-|-----------|-------|
+| Parameter | Estimated Value |
+|-----------|----------------:|
 | θ | **30°** |
 | M | **0.03** |
 | X | **55** |
 
-Total L1 Error
+### Total L1 Error
 
-```
+```text
 0.030834
 ```
 
-Average Error Per Point
+### Average Error Per Point
 
-```
+```text
 0.0000205
 ```
 
@@ -125,27 +114,48 @@ The predicted curve almost perfectly overlaps the original curve.
 
 # Final Parametric Equation
 
-\[
-x(t)=t\cos(30^\circ)-e^{0.03|t|}\sin(0.3t)\sin(30^\circ)+55
-\]
+```text
+x(t) = t*cos(30°) - e^(0.03|t|)*sin(0.3t)*sin(30°) + 55
 
-\[
-y(t)=42+t\sin(30^\circ)+e^{0.03|t|}\sin(0.3t)\cos(30^\circ)
-\]
+y(t) = 42 + t*sin(30°) + e^(0.03|t|)*sin(0.3t)*cos(30°)
+```
 
 ---
 
+# Desmos Equation
 
+Copy the following into Desmos:
 
-# Notes
+```text
+(
+t*cos(30°)-e^(0.03*abs(t))*sin(0.3*t)*sin(30°)+55,
+42+t*sin(30°)+e^(0.03*abs(t))*sin(0.3*t)*cos(30°)
+)
 
-- The solution uses a brute force search.
-- Instead of estimating `t` independently, an analytical expression for `t` was derived from the original equations.
-- This significantly reduced the search space while preserving the original formulation.
-- The final parameters were selected based on the minimum L1 distance between the original and predicted points.
+6 ≤ t ≤ 60
+```
+
+---
+
+# Files
+
+```
+bruteforce_approach.ipynb   -> Implementation
+xy_data.csv                 -> Input dataset
+README.md                   -> Documentation
+```
+
+---
+
+# Observations
+
+- A brute-force search was used to estimate the unknown parameters.
+- Instead of searching for `t`, an analytical expression was derived from the original equations.
+- This significantly reduced the search space and improved computational efficiency.
+- The estimated parameters produced an almost perfect reconstruction of the given curve.
 
 ---
 
 # Author
 
-Hruthik Palivela
+**Hruthik Palivela**
