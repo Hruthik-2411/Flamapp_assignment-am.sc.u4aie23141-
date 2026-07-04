@@ -23,44 +23,21 @@ y(t) = 42 + t*sin(θ) + e^(M|t|)*sin(0.3t)*cos(θ)
 - 0 < X < 100
 - 6 < t < 60
 
-The file **xy_data.csv** contains 1501 points sampled from the above parametric curve.
+The file **xy_data.csv** contains 1501 points sampled from the above curve.
 
 ---
 
 # Approach
 
-Initially, I treated the problem as estimating four unknowns:
+Initially, I considered estimating four unknowns: **θ, M, X and t**. Since every point has its own value of **t**, searching for all of them together would make the brute-force search computationally expensive.
 
-- θ
-- M
-- X
-- t
-
-Since every point on the curve has its own value of **t**, directly searching for all of them would make the brute-force search computationally expensive.
-
-After analyzing the given equations, I derived an analytical expression for **t** by eliminating the exponential term.
-
-Starting from
-
-```text
-x = t*cos(θ) - e^(M|t|)*sin(0.3t)*sin(θ) + X
-
-y = 42 + t*sin(θ) + e^(M|t|)*sin(0.3t)*cos(θ)
-```
-
-the following expression was obtained:
+To simplify the problem, I combined the two given equations by multiplying the first equation with **cos(θ)** and the second equation with **sin(θ)**. After adding them, the exponential terms cancel out, giving the following expression:
 
 ```text
 t = (x - X)*cos(θ) + (y - 42)*sin(θ)
 ```
 
-This observation is important because the dataset already provides the values of **x** and **y**.
-
-Therefore, once a candidate value of **θ** and **X** is selected during the brute-force search, the corresponding value of **t** for every point can be computed directly from the dataset.
-
-As a result, there is no need to search for **t** separately.
-
-This reduces the optimization problem to only three unknown parameters:
+Since the dataset already contains the values of **x** and **y**, and the brute-force search provides candidate values of **θ** and **X**, the corresponding **t** value for every point can be computed directly. Therefore, **t** no longer needs to be searched independently, reducing the optimization to only three unknown parameters:
 
 - θ
 - M
@@ -70,26 +47,19 @@ This reduces the optimization problem to only three unknown parameters:
 
 # Brute Force Algorithm
 
-The algorithm performs an exhaustive search over the possible values of:
+The algorithm performs an exhaustive search over all possible values of:
 
 - θ
 - M
 - X
 
-For every parameter combination, the following steps are executed:
+For every parameter combination:
 
-1. Select a candidate value of θ.
-2. Select a candidate value of X.
-3. Compute the value of **t** for every point in the dataset using
-
-```text
-t = (x - X)*cos(θ) + (y - 42)*sin(θ)
-```
-
-4. Substitute the computed values of **t** back into the original parametric equations.
-5. Generate the predicted values of **x** and **y**.
-6. Compute the L1 distance between the predicted points and the original dataset.
-7. Store the parameter combination with the minimum error.
+1. Compute **t** using the derived equation.
+2. Substitute the computed **t** values back into the original parametric equations.
+3. Generate the predicted `(x, y)` values.
+4. Compute the L1 distance between the predicted points and the original dataset.
+5. Store the parameter combination with the minimum error.
 
 ---
 
@@ -101,7 +71,7 @@ The objective function used is the L1 distance.
 L1 Error = Σ ( |x_actual - x_predicted| + |y_actual - y_predicted| )
 ```
 
-The parameter combination producing the minimum L1 error is selected as the final solution.
+The parameter combination with the minimum error is selected as the final solution.
 
 ---
 
@@ -117,19 +87,19 @@ The parameter combination producing the minimum L1 error is selected as the fina
 
 # Error
 
-Total L1 Error
+**Total L1 Error**
 
 ```text
 0.030834
 ```
 
-Average Error Per Point
+**Average Error Per Point**
 
 ```text
 0.0000205
 ```
 
-The obtained error is extremely small, indicating that the predicted curve almost perfectly overlaps the original curve.
+The obtained parameters reconstruct the given dataset with a very small L1 error.
 
 ---
 
@@ -151,10 +121,10 @@ Parameter Range
 
 # Repository Contents
 
-```
+```text
 bruteforce_approach.ipynb   -> Complete implementation
-xy_data.csv                 -> Dataset
-README.md                   -> Documentation
+xy_data.csv                 -> Input dataset
+README.md                   -> Project documentation
 ```
 
 ---
@@ -162,10 +132,10 @@ README.md                   -> Documentation
 # Observations
 
 - A brute-force search was used to estimate the unknown parameters.
-- Instead of treating **t** as an independent unknown, an analytical expression was derived from the original equations.
-- Since the dataset already contains the values of **x** and **y**, once **θ** and **X** are selected, the corresponding **t** values can be computed directly.
-- This significantly reduces the search space because only **θ**, **M**, and **X** need to be optimized.
-- The estimated parameters reconstruct the given curve with a very small L1 error.
+- An analytical expression for **t** was derived, eliminating the need to search for **t** separately.
+- Since **x** and **y** are available in the dataset, the corresponding **t** values can be computed directly using the derived equation for every candidate value of **θ** and **X**.
+- This significantly reduces the search space while preserving the original mathematical model.
+- The estimated parameters reconstruct the original curve with a very small reconstruction error.
 
 ---
 
