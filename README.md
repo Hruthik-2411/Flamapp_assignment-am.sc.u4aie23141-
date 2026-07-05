@@ -23,24 +23,22 @@ y(t) = 42 + t*sin(θ) + e^(M|t|)*sin(0.3t)*cos(θ)
 - 0 < X < 100
 - 6 < t < 60
 
-The file **xy_data.csv** contains **1501 points** sampled from the above parametric curve. The objective is to estimate the unknown values of **θ**, **M**, and **X** such that the generated curve matches the given dataset as closely as possible.
+The file **xy_data.csv** contains **1501 points** sampled from the above parametric curve. The objective is to estimate the values of **θ**, **M**, and **X** such that the generated curve best matches the given dataset.
 
 ---
 
 # Thought Process
 
-At the beginning, I considered all the unknown quantities in the problem.
-
-The unknowns are:
+Initially, I considered estimating four unknowns:
 
 - θ
 - M
 - X
 - t
 
-Since the dataset contains **1501 points**, every point has its own value of **t**. Therefore, directly searching for all values of **t** together with **θ**, **M**, and **X** would make the search space extremely large.
+Since every point on the curve has its own value of **t**, directly searching for all values of **t** along with **θ**, **M**, and **X** would make the brute-force search computationally very expensive.
 
-Instead of brute-forcing **t**, I tried to determine whether it could be expressed using the given equations. If that was possible, the optimization problem would become much simpler.
+Instead of searching for **t**, I tried to derive an equation that could compute **t** directly from the given dataset. This would reduce the number of unknown parameters and make the search much more efficient.
 
 ---
 
@@ -54,7 +52,7 @@ x = t*cos(θ) - e^(M|t|)*sin(0.3t)*sin(θ) + X
 y = 42 + t*sin(θ) + e^(M|t|)*sin(0.3t)*cos(θ)
 ```
 
-First, move the constant terms to the left.
+Move the constants to the left side.
 
 ```text
 x - X = t*cos(θ) - e^(M|t|)*sin(0.3t)*sin(θ)
@@ -62,77 +60,45 @@ x - X = t*cos(θ) - e^(M|t|)*sin(0.3t)*sin(θ)
 y - 42 = t*sin(θ) + e^(M|t|)*sin(0.3t)*cos(θ)
 ```
 
-Now multiply the first equation by **cos(θ)**
+Multiply the first equation by **cos(θ)**
 
 ```text
-(x - X)cos(θ)
-
-=
-
-t*cos²(θ)
-
--
-
-e^(M|t|)sin(0.3t)sin(θ)cos(θ)
+(x - X)cos(θ) = tcos²(θ) - e^(M|t|)sin(0.3t)sin(θ)cos(θ)
 ```
 
 Multiply the second equation by **sin(θ)**
 
 ```text
-(y - 42)sin(θ)
-
-=
-
-t*sin²(θ)
-
-+
-
-e^(M|t|)sin(0.3t)sin(θ)cos(θ)
+(y - 42)sin(θ) = tsin²(θ) + e^(M|t|)sin(0.3t)sin(θ)cos(θ)
 ```
 
-Adding the two equations,
+Now add both equations.
 
-the exponential terms cancel each other.
+The exponential terms cancel each other.
 
 ```text
-(x - X)cos(θ)
-
-+
-
-(y - 42)sin(θ)
-
-=
-
-t(cos²(θ)+sin²(θ))
+(x - X)cos(θ) + (y - 42)sin(θ) = t(cos²(θ) + sin²(θ))
 ```
 
-Using the trigonometric identity
+Using the identity
 
 ```text
-cos²(θ)+sin²(θ)=1
+cos²(θ) + sin²(θ) = 1
 ```
 
-the equation becomes
+we obtain
 
 ```text
 t = (x - X)cos(θ) + (y - 42)sin(θ)
 ```
 
-This is the key result.
+This is the key observation in the solution.
 
-The dataset already provides **x** and **y** values.
+Since the dataset already contains the values of **x** and **y**, once a candidate value of **θ** and **X** is selected, the value of **t** for every point can be computed directly.
 
-Therefore, whenever the brute-force algorithm selects a candidate value of **θ** and **X**, the corresponding **t** value for every point can be computed directly.
+Therefore, there is no need to search for **t** separately.
 
-As a result, **t no longer needs to be treated as an independent unknown.**
-
-The optimization problem is therefore reduced to only
-
-- θ
-- M
-- X
-
-instead of
+The optimization problem is reduced from
 
 - θ
 - M
@@ -142,31 +108,37 @@ instead of
 - ...
 - t₁₅₀₁
 
-This significantly reduces the search space.
-
----
-
-# Brute Force Algorithm
-
-After deriving the expression for **t**, the brute-force algorithm was implemented as follows.
-
-### Step 1
-
-Read all the points from **xy_data.csv**.
-
-Store the x-coordinates and y-coordinates separately.
-
----
-
-### Step 2
-
-Generate candidate values for
+to only
 
 - θ
 - M
 - X
 
-using the predefined search ranges.
+which significantly reduces the search space.
+
+---
+
+# Brute Force Algorithm
+
+After deriving the expression for **t**, the brute-force algorithm was implemented using the following steps.
+
+### Step 1
+
+Read the dataset from **xy_data.csv**.
+
+Store all x-coordinates and y-coordinates separately.
+
+---
+
+### Step 2
+
+Generate all possible values of
+
+- θ
+- M
+- X
+
+using the specified search ranges.
 
 ---
 
@@ -174,8 +146,8 @@ using the predefined search ranges.
 
 For every candidate value of **θ**
 
-- compute sin(θ)
-- compute cos(θ)
+- Compute sin(θ)
+- Compute cos(θ)
 
 These values are reused throughout the iteration.
 
@@ -185,19 +157,19 @@ These values are reused throughout the iteration.
 
 For every candidate value of **X**
 
-compute the value of **t** for all dataset points using
+Compute **t** for every point in the dataset.
 
 ```text
 t = (x - X)cos(θ) + (y - 42)sin(θ)
 ```
 
-If any value of **t** lies outside the valid range
+If any computed value of **t** lies outside the valid range
 
 ```text
 6 < t < 60
 ```
 
-that parameter combination is rejected.
+the current parameter combination is discarded.
 
 ---
 
@@ -205,38 +177,14 @@ that parameter combination is rejected.
 
 For every candidate value of **M**
 
-substitute the computed **t** values into the original parametric equations.
+Substitute the computed **t** values into the original equations.
 
 ```text
-x(t)
-
-=
-
-t*cos(θ)
-
--
-
-e^(M|t|)sin(0.3t)sin(θ)
-
-+
-
-X
+x(t) = t*cos(θ) - e^(M|t|)*sin(0.3t)*sin(θ) + X
 ```
 
 ```text
-y(t)
-
-=
-
-42
-
-+
-
-t*sin(θ)
-
-+
-
-e^(M|t|)sin(0.3t)cos(θ)
+y(t) = 42 + t*sin(θ) + e^(M|t|)*sin(0.3t)*cos(θ)
 ```
 
 This generates the predicted curve.
@@ -248,28 +196,14 @@ This generates the predicted curve.
 Compute the L1 distance between the predicted points and the original dataset.
 
 ```text
-L1 Error
-
-=
-
-Σ
-
-(
-
-|x_actual-x_predicted|
-
-+
-
-|y_actual-y_predicted|
-
-)
+L1 Error = Σ ( |x_actual - x_predicted| + |y_actual - y_predicted| )
 ```
 
 ---
 
 ### Step 7
 
-If the computed error is smaller than the best error found so far,
+If the computed error is smaller than the previous best error,
 
 store
 
@@ -283,7 +217,7 @@ as the current best solution.
 
 ### Step 8
 
-Repeat the above process until every parameter combination has been evaluated.
+Repeat the above process until every possible parameter combination has been evaluated.
 
 The parameter combination with the minimum L1 error is selected as the final solution.
 
@@ -313,7 +247,7 @@ The parameter combination with the minimum L1 error is selected as the final sol
 0.0000205
 ```
 
-The obtained error is very small, indicating that the predicted curve closely matches the given dataset.
+The obtained error is extremely small, indicating that the predicted curve closely matches the given dataset.
 
 ---
 
@@ -321,7 +255,9 @@ The obtained error is very small, indicating that the predicted curve closely ma
 
 ```text
 x(t) = t*cos(30°) - e^(0.03|t|)*sin(0.3t)*sin(30°) + 55
+```
 
+```text
 y(t) = 42 + t*sin(30°) + e^(0.03|t|)*sin(0.3t)*cos(30°)
 ```
 
@@ -338,7 +274,7 @@ Parameter Range
 ```text
 bruteforce_approach.ipynb   -> Complete implementation
 
-xy_data.csv                 -> Input dataset
+xy_data.csv                 -> Dataset
 
 README.md                   -> Project documentation
 ```
@@ -347,7 +283,7 @@ README.md                   -> Project documentation
 
 # Conclusion
 
-Instead of treating **t** as an additional unknown parameter, an analytical expression for **t** was derived from the original equations. Since the dataset already contains the values of **x** and **y**, the corresponding value of **t** can be computed directly once **θ** and **X** are selected.
+Instead of treating **t** as another unknown parameter, an analytical expression for **t** was derived from the given equations. Since the dataset already provides **x** and **y**, the value of **t** can be computed directly once **θ** and **X** are chosen.
 
 This reduced the optimization problem from estimating thousands of unknown values to estimating only three unknown parameters (**θ**, **M**, and **X**). A brute-force search over these parameters successfully reconstructed the original curve with a very small L1 error.
 
